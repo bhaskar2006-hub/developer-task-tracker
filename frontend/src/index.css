@@ -1,0 +1,167 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f4f5f7;
+  color: #171717;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.container {
+  width: min(900px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 64px 0;
+}
+
+header {
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin: 0 0 10px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(36px, 7vw, 58px);
+  line-height: 1;
+}
+
+.subtitle {
+  color: #666;
+  max-width: 650px;
+  line-height: 1.6;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+h2 {
+  margin-top: 0;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  padding: 12px 14px;
+  outline: none;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #555;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 16px;
+  cursor: pointer;
+}
+
+form button {
+  justify-self: start;
+  background: #171717;
+  color: white;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-heading span {
+  color: #777;
+  font-size: 14px;
+}
+
+.task-list {
+  display: grid;
+  gap: 10px;
+}
+
+.task {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+}
+
+.task-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.task h3 {
+  margin: 2px 0 4px;
+}
+
+.task p {
+  margin: 0;
+  color: #777;
+  font-size: 14px;
+}
+
+.check {
+  padding: 0;
+  background: transparent;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.check.completed {
+  color: #333;
+}
+
+.done {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.delete {
+  background: #f1f1f1;
+  color: #333;
+}
+
+.empty {
+  color: #777;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 32px 0;
+  }
+
+  .task {
+    align-items: flex-start;
+  }
+}
