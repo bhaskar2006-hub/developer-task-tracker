@@ -48,3 +48,4 @@ Frontend runs on the Vite URL shown in the terminal.
 ## MongoDB
 
 Set `MONGODB_URI` in `backend/.env`.
+# developer-task-tracker
