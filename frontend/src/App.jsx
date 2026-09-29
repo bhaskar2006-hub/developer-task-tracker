@@ -1,143 +1,66 @@
 import { useEffect, useState } from "react";
-import api from "./services/api";
 
-function App() {
+const API = "http://localhost:5000/api";
+
+export default function App() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
-  async function fetchTasks() {
-    try {
-      const response = await api.get("/tasks");
-      setTasks(response.data);
-    } catch (error) {
-      console.error(error);
-      alert("Could not load tasks. Is the backend running?");
-    } finally {
-      setLoading(false);
+  async function loadTasks() {
+    const response = await fetch(`${API}/tasks`);
+    setTasks(await response.json());
+  }
+
+  async function addTask(e) {
+    e.preventDefault();
+    if (!title.trim()) return;
+    const response = await fetch(`${API}/tasks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title })
+    });
+    if (response.ok) {
+      setTitle("");
+      setMessage("Task created successfully.");
+      loadTasks();
     }
+  }
+
+  async function completeTask(id) {
+    await fetch(`${API}/tasks/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "done" })
+    });
+    loadTasks();
   }
 
   useEffect(() => {
-    fetchTasks();
+    loadTasks().catch(() => setMessage("Start the backend first."));
   }, []);
 
-  async function addTask(event) {
-    event.preventDefault();
-
-    if (!title.trim()) return;
-
-    try {
-      const response = await api.post("/tasks", {
-        title,
-        description
-      });
-
-      setTasks((current) => [response.data, ...current]);
-      setTitle("");
-      setDescription("");
-    } catch (error) {
-      alert("Could not create task.");
-    }
-  }
-
-  async function toggleTask(task) {
-    try {
-      const response = await api.patch(`/tasks/${task._id}`, {
-        completed: !task.completed
-      });
-
-      setTasks((current) =>
-        current.map((item) =>
-          item._id === task._id ? response.data : item
-        )
-      );
-    } catch (error) {
-      alert("Could not update task.");
-    }
-  }
-
-  async function deleteTask(id) {
-    try {
-      await api.delete(`/tasks/${id}`);
-      setTasks((current) => current.filter((task) => task._id !== id));
-    } catch (error) {
-      alert("Could not delete task.");
-    }
-  }
-
   return (
-    <main className="container">
-      <header>
-        <p className="eyebrow">INTERNSHIP PHASE 1</p>
-        <h1>Developer Task Tracker</h1>
-        <p className="subtitle">
-          A small full-stack project for learning professional development workflow.
-        </p>
-      </header>
-
-      <section className="card">
-        <h2>Add a task</h2>
-        <form onSubmit={addTask}>
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="e.g. Learn Git branches"
-          />
-          <textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            placeholder="Optional description"
-            rows="3"
-          />
-          <button type="submit">Add Task</button>
-        </form>
-      </section>
-
-      <section className="card">
-        <div className="section-heading">
-          <h2>My Tasks</h2>
-          <span>{tasks.length} total</span>
-        </div>
-
-        {loading ? (
-          <p>Loading tasks...</p>
-        ) : tasks.length === 0 ? (
-          <p className="empty">No tasks yet. Add your first one above.</p>
-        ) : (
-          <div className="task-list">
-            {tasks.map((task) => (
-              <article className="task" key={task._id}>
-                <div className="task-content">
-                  <button
-                    className={`check ${task.completed ? "completed" : ""}`}
-                    onClick={() => toggleTask(task)}
-                    aria-label="Toggle task"
-                  >
-                    {task.completed ? "✓" : "○"}
-                  </button>
-                  <div>
-                    <h3 className={task.completed ? "done" : ""}>
-                      {task.title}
-                    </h3>
-                    {task.description && <p>{task.description}</p>}
-                  </div>
-                </div>
-
-                <button
-                  className="delete"
-                  onClick={() => deleteTask(task._id)}
-                >
-                  Delete
-                </button>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+    <main style={{maxWidth: 760, margin: "40px auto", padding: 20, fontFamily: "Arial"}}>
+      <h1>Developer Task Tracker</h1>
+      <p>Yuva Intern — Fundamentals and Setup</p>
+      <form onSubmit={addTask} style={{display:"flex", gap:10}}>
+        <input value={title} onChange={e => setTitle(e.target.value)}
+          placeholder="Enter a task" style={{flex:1,padding:12}} />
+        <button>Add Task</button>
+      </form>
+      <p>{message}</p>
+      <ul>
+        {tasks.map(task => (
+          <li key={task._id} style={{marginBottom:12}}>
+            <strong>{task.title}</strong> — {task.status}
+            {task.status !== "done" &&
+              <button onClick={() => completeTask(task._id)} style={{marginLeft:10}}>
+                Complete
+              </button>}
+          </li>
+        ))}
+      </ul>
     </main>
   );
 }
-
-export default App;
