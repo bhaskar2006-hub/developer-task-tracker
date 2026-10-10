@@ -1,66 +1,18 @@
-import { useEffect, useState } from "react";
-
-const API = "http://localhost:5000/api";
-
-export default function App() {
-  const [tasks, setTasks] = useState([]);
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-
-  async function loadTasks() {
-    const response = await fetch(`${API}/tasks`);
-    setTasks(await response.json());
-  }
-
-  async function addTask(e) {
-    e.preventDefault();
-    if (!title.trim()) return;
-    const response = await fetch(`${API}/tasks`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title })
-    });
-    if (response.ok) {
-      setTitle("");
-      setMessage("Task created successfully.");
-      loadTasks();
-    }
-  }
-
-  async function completeTask(id) {
-    await fetch(`${API}/tasks/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "done" })
-    });
-    loadTasks();
-  }
-
-  useEffect(() => {
-    loadTasks().catch(() => setMessage("Start the backend first."));
-  }, []);
-
-  return (
-    <main style={{maxWidth: 760, margin: "40px auto", padding: 20, fontFamily: "Arial"}}>
-      <h1>Developer Task Tracker</h1>
-      <p>Yuva Intern — Fundamentals and Setup</p>
-      <form onSubmit={addTask} style={{display:"flex", gap:10}}>
-        <input value={title} onChange={e => setTitle(e.target.value)}
-          placeholder="Enter a task" style={{flex:1,padding:12}} />
-        <button>Add Task</button>
-      </form>
-      <p>{message}</p>
-      <ul>
-        {tasks.map(task => (
-          <li key={task._id} style={{marginBottom:12}}>
-            <strong>{task.title}</strong> — {task.status}
-            {task.status !== "done" &&
-              <button onClick={() => completeTask(task._id)} style={{marginLeft:10}}>
-                Complete
-              </button>}
-          </li>
-        ))}
-      </ul>
-    </main>
-  );
+import {useCallback,useEffect,useMemo,useState} from "react";
+import {taskApi} from "./services/api.js";
+import "./index.css";
+export default function App(){
+ const[tasks,setTasks]=useState([]),[title,setTitle]=useState(""),[description,setDescription]=useState(""),[filter,setFilter]=useState("all"),[message,setMessage]=useState(""),[busy,setBusy]=useState(false);
+ const refresh=useCallback(async()=>setTasks(await taskApi.list()),[]);
+ useEffect(()=>{refresh().catch(()=>setMessage("Could not reach the API. Start the backend and try again."));},[refresh]);
+ const visible=useMemo(()=>filter==="all"?tasks:tasks.filter(t=>t.status===filter),[tasks,filter]);
+ const counts={all:tasks.length,todo:tasks.filter(t=>t.status==="todo").length,progress:tasks.filter(t=>t.status==="in-progress").length,done:tasks.filter(t=>t.status==="done").length};
+ async function add(e){e.preventDefault();if(title.trim().length<2){setMessage("Task title must contain at least 2 characters.");return;}setBusy(true);try{await taskApi.create({title,description});setTitle("");setDescription("");setMessage("Task created.");await refresh();}catch(e){setMessage(e.message);}finally{setBusy(false);}}
+ async function cycle(task){const status=task.status==="todo"?"in-progress":task.status==="in-progress"?"done":"todo";try{await taskApi.update(task._id,{status});await refresh();setMessage("Task status updated.");}catch(e){setMessage(e.message);}}
+ async function remove(task){try{await taskApi.remove(task._id);await refresh();setMessage("Task deleted.");}catch(e){setMessage(e.message);}}
+ return <main className="container"><header><p className="eyebrow">YUVA INTERN · PRACTICAL PROJECT</p><h1>Developer Task Tracker</h1><p className="subtitle">Plan small steps, track progress, and verify quality. A full-stack learning project built with React, Express, and MongoDB-compatible storage.</p></header>
+ <section className="stats">{[["Total tasks",counts.all],["To do",counts.todo],["In progress",counts.progress],["Completed",counts.done]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</section>
+ <section className="card"><h2>Create a task</h2><form onSubmit={add}><label>Task title<input value={title} onChange={e=>setTitle(e.target.value)} minLength="2" maxLength="120" required placeholder="e.g. Write API tests"/></label><label>Description (optional)<textarea value={description} onChange={e=>setDescription(e.target.value)} maxLength="500" rows="3" placeholder="What does done look like?"/></label><button disabled={busy}>{busy?"Adding…":"Add task"}</button></form>{message&&<p className="notice" role="status">{message}</p>}</section>
+ <section className="card"><div className="section-heading"><h2>Your tasks</h2><span>{visible.length} shown</span></div><nav className="filters" aria-label="Filter tasks">{["all","todo","in-progress","done"].map(v=><button key={v} className={filter===v?"active":""} onClick={()=>setFilter(v)}>{v==="all"?"All":v==="todo"?"To do":v==="in-progress"?"In progress":"Completed"}</button>)}</nav>
+ {visible.length===0?<p className="empty">No tasks in this view. Add one above or choose another filter.</p>:<ul className="task-list">{visible.map(task=><li className="task" key={task._id}><div className="task-content"><button className={`check ${task.status==="done"?"completed":""}`} aria-label={`Change status for ${task.title}`} onClick={()=>cycle(task)}>{task.status==="done"?"✓":"○"}</button><div><h3 className={task.status==="done"?"done":""}>{task.title}</h3>{task.description&&<p>{task.description}</p>}<span className={`status status-${task.status}`}>{task.status.replace("-"," ")}</span></div></div><button className="delete" onClick={()=>remove(task)} aria-label={`Delete ${task.title}`}>Delete</button></li>)}</ul>}</section><footer>Built for Yuva Intern · Implementation and quality assurance</footer></main>;
 }
